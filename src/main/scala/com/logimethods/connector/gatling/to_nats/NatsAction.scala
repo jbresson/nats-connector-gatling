@@ -15,7 +15,7 @@ import io.gatling.core.CoreComponents
 import io.gatling.commons.stats.{ KO, OK }
 import io.gatling.core.CoreComponents
 import io.gatling.core.action.builder.ActionBuilder
-import io.gatling.core.action.{ Action, ActionActor, ExitableActorDelegatingAction }
+import io.gatling.core.action.{ Action, ExitableAction, RendezVous, RendezVousActor }
 import io.gatling.core.config.GatlingConfiguration
 import io.gatling.core.protocol._
 import io.gatling.core.session.Session
@@ -73,19 +73,18 @@ case class NatsProtocol(properties: Properties, subject: String, serializer: Obj
 
 case class NatsComponents(natsProtocol: NatsProtocol) extends ProtocolComponents {
 
-  override def onStart: Session => Session = ProtocolComponents.NoopOnStart
   override def onExit: Session => Unit = ProtocolComponents.NoopOnExit
 }
 
 object NatsCall extends NameGen {
-  def apply(messageProvider: Object, protocol: NatsProtocol, system: ActorSystem, statsEngine: StatsEngine, clock: Clock, next: Action) = {
-    val actor = system.actorOf(Props(new NatsCall(messageProvider, protocol, next, statsEngine)))
-    new ExitableActorDelegatingAction(genName("natsCall"), statsEngine, clock, next, actor)
+  def apply(users: Int, messageProvider: Object, protocol: NatsProtocol, system: ActorSystem, statsEngine: StatsEngine, clock: Clock, next: Action) = {
+    val actor = system.actorOf(Props(new NatsCall(users, messageProvider, protocol, next, statsEngine)))
+    new RendezVous(genName("natsCall"), statsEngine, clock, next, actor)
   }
 
 }
 
-class NatsCall(messageProvider: Object, protocol: NatsProtocol, val next: Action, statsEngine: StatsEngine) extends ActionActor {
+class NatsCall(uers: Int, messageProvider: Object, protocol: NatsProtocol, next: Action, statsEngine: StatsEngine) extends ExitableAction {
   override def execute(session: Session): Unit = {
     import com.logimethods.connector.gatling.to_nats.NatsMessage
     messageProvider match {
@@ -123,7 +122,7 @@ class NatsCall(messageProvider: Object, protocol: NatsProtocol, val next: Action
  * (which could be a simple String if the message doesn't have to change over time). 
  */
 case class NatsBuilder(messageProvider: Object) extends ActionBuilder {
-  def natsProtocol(protocols: Protocols) = protocols.protocol[NatsProtocol].getOrElse(throw new UnsupportedOperationException("NatsProtocol Protocol wasn't registered"))
+  def natsProtocol(protocols: Protocols) = protocols.getOrElse(throw new UnsupportedOperationException("NatsProtocol Protocol wasn't registered"))
 
   private def components(protocolComponentsRegistry: ProtocolComponentsRegistry): NatsComponents =
     protocolComponentsRegistry.components(NatsProtocol.NatsProtocolKey)

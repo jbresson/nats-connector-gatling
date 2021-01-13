@@ -15,7 +15,7 @@ import io.gatling.core.CoreComponents
 import io.gatling.commons.stats.{ KO, OK }
 import io.gatling.core.CoreComponents
 import io.gatling.core.action.builder.ActionBuilder
-import io.gatling.core.action.{ Action, ActionActor, ExitableActorDelegatingAction }
+import io.gatling.core.action.{ Action, RendezVousActor }
 import io.gatling.core.config.GatlingConfiguration
 import io.gatling.core.protocol._
 import io.gatling.core.session.Session
@@ -73,7 +73,6 @@ case class NatsStreamingProtocol(natsUrl:String, clusterID: String, subject: Str
 
 case class NatsStreamingComponents(natsProtocol: NatsStreamingProtocol) extends ProtocolComponents {
 
-  override def onStart: Session => Session = ProtocolComponents.NoopOnStart
   override def onExit: Session => Unit = ProtocolComponents.NoopOnExit
 }
 
@@ -85,7 +84,7 @@ object NatsStreamingCall extends NameGen {
 
 }
 
-class NatsStreamingCall(messageProvider: Object, protocol: NatsStreamingProtocol, val next: Action, statsEngine: StatsEngine) extends ActionActor {
+class NatsStreamingCall(messageProvider: Object, protocol: NatsStreamingProtocol, val next: Action, statsEngine: StatsEngine) extends RendezVousActor {
 
   override def execute(session: Session): Unit = {
     import com.logimethods.connector.gatling.to_nats.NatsMessage
@@ -124,7 +123,7 @@ class NatsStreamingCall(messageProvider: Object, protocol: NatsStreamingProtocol
  * (which could be a simple String if the message doesn't have to change over time). 
  */
 case class NatsStreamingBuilder(messageProvider: Object) extends ActionBuilder {
-  def natsProtocol(protocols: Protocols) = protocols.protocol[NatsStreamingProtocol].getOrElse(throw new UnsupportedOperationException("NatsStreamingProtocol Protocol wasn't registered"))
+  def natsProtocol(protocols: Protocol) = protocols.getOrElse(throw new UnsupportedOperationException("NatsStreamingProtocol Protocol wasn't registered"))
 
   private def components(protocolComponentsRegistry: ProtocolComponentsRegistry): NatsStreamingComponents =
     protocolComponentsRegistry.components(NatsStreamingProtocol.NatsStreamingProtocolKey)

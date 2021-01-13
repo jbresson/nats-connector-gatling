@@ -7,16 +7,22 @@ organization := "com.logimethods"
 
 version := "1.0.0"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.4"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += "Sonatype OSS Release" at "https://oss.sonatype.org/content/groups/public/"
 
-libraryDependencies += "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.0.3" % "provided"
-libraryDependencies += "io.gatling"            % "gatling-test-framework"    % "3.0.3" % "test"
-libraryDependencies += "io.nats"               % "java-nats-streaming"       % "2.1.2"
+// https://mvnrepository.com/artifact/io.gatling.highcharts/gatling-charts-highcharts
+libraryDependencies += "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.5.0"
 
-// enablePlugins(GatlingPlugin)
+// https://mvnrepository.com/artifact/io.gatling/gatling-test-framework
+libraryDependencies += "io.gatling" % "gatling-test-framework" % "3.5.0"
+
+// https://mvnrepository.com/artifact/io.nats/java-nats-streaming
+libraryDependencies += "io.nats" % "java-nats-streaming" % "2.2.3"
+
+
+enablePlugins(GatlingPlugin)
 
 updateOptions := updateOptions.value.withCachedResolution(true)
 
@@ -66,10 +72,10 @@ pomExtra := (
   </developers>
 )
 
-publishTo <<= version { (v: String) =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-}
+//publishTo <<= version { (v: String) =>
+//  val nexus = "https://oss.sonatype.org/"
+//  if (v.trim.endsWith("SNAPSHOT"))
+//    Some("snapshots" at nexus + "content/repositories/snapshots")
+//  else
+//    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+//}
